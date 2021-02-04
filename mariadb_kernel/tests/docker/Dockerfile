@@ -31,4 +31,3 @@ RUN conda create -n py38 python=3.8
 RUN echo "source /miniforge/etc/profile.d/conda.sh && conda activate py38" >> ~/.bashrc
 
 RUN python3 -m pip install notebook jupyterlab
-
