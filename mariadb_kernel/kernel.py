@@ -2,6 +2,7 @@
 # Copyright (c) MariaDB Foundation.
 # Distributed under the terms of the Modified BSD License.
 
+from mariadb_kernel.autocomple_manager import AutoCompletionManager
 from ipykernel.kernelbase import Kernel
 
 from ._version import version as __version__
@@ -43,6 +44,7 @@ class MariaDBKernel(Kernel):
 
         try:
             self.mariadb_client.start()
+            self._create_completion_manager()
         except ServerIsDownError:
             if not self.client_config.start_server():
                 self.log.error(
@@ -60,6 +62,17 @@ class MariaDBKernel(Kernel):
             # Reconnect the client now that the server is up
             if self.mariadb_server.is_up():
                 self.mariadb_client.start()
+                self._create_completion_manager()
+
+    def _create_completion_manager(self):
+        self.complete_manager = AutoCompletionManager(
+            None,
+            self.client_config.default_config["user"],
+            self.client_config.default_config["password"],
+            self.client_config.default_config["host"],
+            int(self.client_config.default_config["port"]),
+            self.log,
+        )
 
     def get_delimiter(self):
         return self.delimiter
@@ -97,6 +110,11 @@ class MariaDBKernel(Kernel):
     def do_execute(
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
     ):
+        if code.startswith("use "):
+            table_name = code.rstrip(";").lstrip("use ")
+            self.complete_manager.change_db(table_name)
+            self.log.info("do_execute do change table to ", table_name)
+
         rv = {
             "status": "ok",
             # The base class increments the execution count
@@ -147,4 +165,18 @@ class MariaDBKernel(Kernel):
             self.mariadb_server.stop()
 
     def do_complete(self, code, cursor_pos):
-        return {"status": "ok", "matches": ["test"]}
+        self.log.info("code : ", code)
+        completion_list = self.complete_manager.get_completions(code, cursor_pos)
+        match_text_list = [completion.text for completion in completion_list]
+        self.log.info("match_text_list", match_text_list)
+        offset = 0
+        if len(completion_list) > 0:
+            offset = completion_list[
+                0
+            ].start_position  # if match part is 'sel', then start_position would be -3
+        return {
+            "status": "ok",
+            "matches": match_text_list,
+            "cursor_start": cursor_pos + offset,
+            "cursor_end": cursor_pos,
+        }
