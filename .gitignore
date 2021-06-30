@@ -12,3 +12,7 @@ __pycache__/
 
 # Ignore auto-updated version file
 mariadb_kernel/_version.py
+
+.eggs/
+.vscode/
+mariadb_kernel.egg-info

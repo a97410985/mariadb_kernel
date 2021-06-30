@@ -2,6 +2,7 @@
 # Copyright (c) MariaDB Foundation.
 # Distributed under the terms of the Modified BSD License.
 
+from typing import Text
 from mariadb_kernel.autocomple_manager import AutoCompletionManager
 from ipykernel.kernelbase import Kernel
 
@@ -21,6 +22,8 @@ import pexpect
 import re
 import pandas
 from bs4 import BeautifulSoup
+
+_EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
 
 class MariaDBKernel(Kernel):
@@ -174,9 +177,22 @@ class MariaDBKernel(Kernel):
             offset = completion_list[
                 0
             ].start_position  # if match part is 'sel', then start_position would be -3
+        type_dict_list = []
+        for completion in completion_list:
+            if completion.display_meta is not None:
+                type_dict_list.append(
+                    dict(
+                        start=completion.start_position,
+                        end=len(completion.text) + completion.start_position,
+                        text=completion.text,
+                        type=completion.display_meta_text,  # display_meta is FormattedText object
+                    )
+                )
+        self.log.info("haha4")
         return {
             "status": "ok",
             "matches": match_text_list,
             "cursor_start": cursor_pos + offset,
             "cursor_end": cursor_pos,
+            "metadata": {_EXPERIMENTAL_KEY_NAME: type_dict_list},
         }
