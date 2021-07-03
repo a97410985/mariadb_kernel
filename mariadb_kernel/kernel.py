@@ -34,6 +34,7 @@ class MariaDBKernel(Kernel):
     banner = "MariaDB kernel"
 
     def __init__(self, **kwargs):
+        self.log = logging.Logger("test")
         Kernel.__init__(self, **kwargs)
         self.delimiter = ";"
         self.client_config = ClientConfig(self.log)

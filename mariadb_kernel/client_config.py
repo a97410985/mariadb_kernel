@@ -12,9 +12,9 @@ class ClientConfig:
         self.log = log
         self.config_name = name
 
-        datadir = "/tmp/mariadb_kernel/datadir"
-        pidfile = "/tmp/mariadb_kernel/mysqld.pid"
-        socketfile = "/tmp/mariadb_kernel/mysqld.sock"
+        datadir = "/tmp/datadir"
+        pidfile = "/tmp/mysqld.pid"
+        socketfile = "/tmp/mysqld.sock"
 
         if "NB_USER" in os.environ:
             datadir = os.path.join("/home/", os.environ["NB_USER"], "work", ".db")
@@ -31,13 +31,8 @@ class ClientConfig:
             "client_bin": "mysql",
             "server_bin": "mysqld",
             "db_init_bin": "mysql_install_db",
-            "extra_server_config": [
-                "--no-defaults",
-                "--skip_log_error",
-            ],
-            "extra_db_init_config": [
-                "--auth-root-authentication-method=normal",
-            ],
+            "extra_server_config": ["--no-defaults", "--skip_log_error",],
+            "extra_db_init_config": ["--auth-root-authentication-method=normal",],
             "debug": "False",
         }
 
@@ -111,6 +106,7 @@ class ClientConfig:
         # Server specific config
         rv.append(f"--datadir={self.default_config['server_datadir']}")
         rv.append(f"--pid-file={self.default_config['server_pid']}")
+        rv.append(f"--user={self.default_config['user']}")
         return rv
 
     def get_init_args(self):
