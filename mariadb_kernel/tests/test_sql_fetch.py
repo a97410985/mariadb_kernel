@@ -179,3 +179,19 @@ def test_mariadb_sql_fetch_get_connected_clients_num(
     sql_fetch = SqlFetch(client, mocklog)
 
     assert sql_fetch.num_connected_clients() == 1
+
+
+def test_mariadb_sql_fetch_get_current_used_database_name(
+    mariadb_server: Type[MariaDBServer],
+):
+    mocklog = Mock()
+    cfg = ClientConfig(mocklog, name="nonexistentcfg.json")  # default config
+
+    mariadb_server(mocklog, cfg)
+
+    client = MariaDBClient(mocklog, cfg)
+    client.start()
+    client.run_statement("use test;")
+    sql_fetch = SqlFetch(client, mocklog)
+
+    assert sql_fetch.get_db_name() == "test"
