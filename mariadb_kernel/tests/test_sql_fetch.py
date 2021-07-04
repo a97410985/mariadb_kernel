@@ -40,7 +40,7 @@ def test_mariadb_sql_fetch_get_table_list(mariadb_server: Type[MariaDBServer]):
     sql_fetch = SqlFetch(client, mocklog)
 
     unittest.TestCase().assertListEqual(
-        sql_fetch.tables(), ["table1", "table2"],
+        sql_fetch.tables(), [("table1",), ("table2",)],
     )
 
     client.run_statement("drop database t1;")
@@ -59,47 +59,50 @@ def test_mariadb_sql_fetch_get_show_candiates(mariadb_server: Type[MariaDBServer
     unittest.TestCase().assertListEqual(
         sql_fetch.show_candidates(),
         [
-            "SHOW AUTHORS",
-            "SHOW BINARY LOGS",
-            "SHOW BINLOG EVENTS",
-            "SHOW CHARACTER SET",
-            "SHOW COLLATION",
-            "SHOW COLUMNS",
-            "SHOW CONTRIBUTORS",
-            "SHOW CREATE DATABASE",
-            "SHOW CREATE EVENT",
-            "SHOW CREATE FUNCTION",
-            "SHOW CREATE PROCEDURE",
-            "SHOW CREATE TABLE",
-            "SHOW CREATE TRIGGER",
-            "SHOW CREATE VIEW",
-            "SHOW DATABASES",
-            "SHOW ENGINE",
-            "SHOW ENGINES",
-            "SHOW ERRORS",
-            "SHOW EVENTS",
-            "SHOW FUNCTION CODE",
-            "SHOW FUNCTION STATUS",
-            "SHOW GRANTS",
-            "SHOW INDEX",
-            "SHOW MASTER STATUS",
-            "SHOW OPEN TABLES",
-            "SHOW PLUGINS",
-            "SHOW PRIVILEGES",
-            "SHOW PROCEDURE CODE",
-            "SHOW PROCEDURE STATUS",
-            "SHOW PROCESSLIST",
-            "SHOW PROFILE",
-            "SHOW PROFILES",
-            "SHOW RELAYLOG EVENTS",
-            "SHOW SLAVE HOSTS",
-            "SHOW SLAVE STATUS",
-            "SHOW STATUS",
-            "SHOW TABLE STATUS",
-            "SHOW TABLES",
-            "SHOW TRIGGERS",
-            "SHOW VARIABLES",
-            "SHOW WARNINGS",
+            (t,)
+            for t in [
+                "AUTHORS",
+                "BINARY LOGS",
+                "BINLOG EVENTS",
+                "CHARACTER SET",
+                "COLLATION",
+                "COLUMNS",
+                "CONTRIBUTORS",
+                "CREATE DATABASE",
+                "CREATE EVENT",
+                "CREATE FUNCTION",
+                "CREATE PROCEDURE",
+                "CREATE TABLE",
+                "CREATE TRIGGER",
+                "CREATE VIEW",
+                "DATABASES",
+                "ENGINE",
+                "ENGINES",
+                "ERRORS",
+                "EVENTS",
+                "FUNCTION CODE",
+                "FUNCTION STATUS",
+                "GRANTS",
+                "INDEX",
+                "MASTER STATUS",
+                "OPEN TABLES",
+                "PLUGINS",
+                "PRIVILEGES",
+                "PROCEDURE CODE",
+                "PROCEDURE STATUS",
+                "PROCESSLIST",
+                "PROFILE",
+                "PROFILES",
+                "RELAYLOG EVENTS",
+                "SLAVE HOSTS",
+                "SLAVE STATUS",
+                "STATUS",
+                "TABLE STATUS",
+                "TABLES",
+                "TRIGGERS",
+                "VARIABLES",
+                "WARNINGS",
+            ]
         ],
     )
 
@@ -115,7 +118,7 @@ def test_mariadb_sql_fetch_get_user_list(mariadb_server: Type[MariaDBServer]):
     sql_fetch = SqlFetch(client, mocklog)
 
     assert set(["'root'@'127.0.0.1'", "''@'localhost'", "'root'@'localhost'"]).issubset(
-        sql_fetch.users()
+        t[0] for t in sql_fetch.users()
     )
 
 
@@ -138,7 +141,7 @@ def test_mariadb_sql_fetch_get_function_list(mariadb_server: Type[MariaDBServer]
         RETURN CONCAT('Hello, ',s,'!');"""
     )
 
-    assert set(["hello"]).issubset(sql_fetch.functions())
+    assert set(["hello"]).issubset([t[0] for t in sql_fetch.functions()])
 
     client.run_statement("drop function hello if exists;")
 

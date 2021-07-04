@@ -13,6 +13,7 @@ from mariadb_kernel.mariadb_client import (
 from mariadb_kernel.code_parser import CodeParser
 from mariadb_kernel.mariadb_server import MariaDBServer
 from mariadb_kernel.maria_magics.maria_magic import MariaMagic
+from mariadb_kernel.autocompleter import Autocompleter
 
 import logging
 import pexpect
@@ -34,7 +35,6 @@ class MariaDBKernel(Kernel):
     banner = "MariaDB kernel"
 
     def __init__(self, **kwargs):
-        self.log = logging.Logger("test")
         Kernel.__init__(self, **kwargs)
         self.delimiter = ";"
         self.client_config = ClientConfig(self.log)
@@ -66,6 +66,7 @@ class MariaDBKernel(Kernel):
             # Reconnect the client now that the server is up
             if self.mariadb_server.is_up():
                 self.mariadb_client.start()
+        self.mariadb_client.run_statement("use test;")
 
     def get_delimiter(self):
         return self.delimiter
@@ -190,4 +191,20 @@ class MariaDBKernel(Kernel):
             self.kill_server()
 
     def do_complete(self, code, cursor_pos):
-        return {"status": "ok", "matches": ["test"]}
+        if hasattr(self, "autocompleter") is False:
+            self.log.info("No autocompleter, create one")
+            self.autocompleter = Autocompleter(self.mariadb_client, self.log)
+        completion_list = self.autocompleter.get_suggestions(code, cursor_pos)
+        match_text_list = [completion.text for completion in completion_list]
+        self.log.info("match_text_list", match_text_list)
+        offset = 0
+        if len(completion_list) > 0:
+            offset = completion_list[
+                0
+            ].start_position  # if match part is 'sel', then start_position would be -3
+        return {
+            "status": "ok",
+            "matches": match_text_list,
+            "cursor_start": cursor_pos + offset,
+            "cursor_end": cursor_pos,
+        }
